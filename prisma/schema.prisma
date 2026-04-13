@@ -7,7 +7,7 @@ datasource db {
 }
 
 model Respondent {
-  id          String    @id @default(cuid())
+  id          String    @id @default(uuid())
   name        String
   role        String
   email       String
@@ -20,7 +20,7 @@ model Respondent {
 }
 
 model Answer {
-  id            String     @id @default(cuid())
+  id            String     @id @default(uuid())
   respondentId  String
   respondent    Respondent @relation(fields: [respondentId], references: [id], onDelete: Cascade)
   sectionIdx    Int

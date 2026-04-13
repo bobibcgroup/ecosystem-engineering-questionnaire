@@ -5,6 +5,7 @@ import { TOTAL_QUESTIONS } from '@/lib/questions'
 import { format } from 'date-fns'
 import RespondentTable from '@/components/admin/RespondentTable'
 import ExportPanel from '@/components/admin/ExportPanel'
+import LogoutButton from '@/components/admin/LogoutButton'
 import type { AdminRespondent } from '@/types'
 
 export const dynamic = 'force-dynamic'
@@ -56,7 +57,10 @@ export default async function AdminPage() {
               </span>
             </div>
           </div>
-          <ExportPanel />
+          <div className="flex items-center gap-3">
+            <ExportPanel />
+            <LogoutButton />
+          </div>
         </div>
       </div>
 
