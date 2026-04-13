@@ -1,0 +1,33 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+}
+
+model Respondent {
+  id          String    @id @default(cuid())
+  name        String
+  role        String
+  email       String
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  lastStepIdx Int       @default(0)
+  submitted   Boolean   @default(false)
+  submittedAt DateTime?
+  answers     Answer[]
+}
+
+model Answer {
+  id            String     @id @default(cuid())
+  respondentId  String
+  respondent    Respondent @relation(fields: [respondentId], references: [id], onDelete: Cascade)
+  sectionIdx    Int
+  questionIdx   Int
+  questionKey   String
+  value         String     @default("")
+  updatedAt     DateTime   @updatedAt
+
+  @@unique([respondentId, sectionIdx, questionIdx])
+}

@@ -1,15 +1,15 @@
-import { redirect } from 'next/navigation'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
+import { redirect } from 'next/navigation'
 
-export default async function Home() {
+export default async function AdminLayout({ children }: { children: React.ReactNode }) {
   const session = await getServerSession(authOptions)
   if (!session) {
     redirect('/login')
   }
   const role = (session.user as { role?: string })?.role
-  if (role === 'admin') {
-    redirect('/admin')
+  if (role !== 'admin') {
+    redirect('/questionnaire')
   }
-  redirect('/questionnaire')
+  return <>{children}</>
 }
