@@ -29,25 +29,21 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ success: false, error: 'Missing required fields' }, { status: 400 })
   }
 
-  const answer = await prisma.answer.upsert({
+  // Avoid upsert (uses transactions) — manual find + create/update
+  const existing = await prisma.answer.findUnique({
     where: {
-      respondentId_sectionIdx_questionIdx: {
-        respondentId,
-        sectionIdx,
-        questionIdx,
-      },
-    },
-    create: {
-      respondentId,
-      sectionIdx,
-      questionIdx,
-      questionKey,
-      value: value ?? '',
-    },
-    update: {
-      value: value ?? '',
+      respondentId_sectionIdx_questionIdx: { respondentId, sectionIdx, questionIdx },
     },
   })
+
+  const answer = existing
+    ? await prisma.answer.update({
+        where: { id: existing.id },
+        data: { value: value ?? '' },
+      })
+    : await prisma.answer.create({
+        data: { respondentId, sectionIdx, questionIdx, questionKey, value: value ?? '' },
+      })
 
   if (lastStepIdx !== undefined) {
     await prisma.respondent.update({
@@ -83,29 +79,20 @@ export async function PUT(req: NextRequest) {
     return NextResponse.json({ success: false, error: 'Missing required fields' }, { status: 400 })
   }
 
-  await Promise.all(
-    answers.map((a) =>
-      prisma.answer.upsert({
-        where: {
-          respondentId_sectionIdx_questionIdx: {
-            respondentId,
-            sectionIdx,
-            questionIdx: a.questionIdx,
-          },
-        },
-        create: {
-          respondentId,
-          sectionIdx,
-          questionIdx: a.questionIdx,
-          questionKey: a.questionKey,
-          value: a.value,
-        },
-        update: {
-          value: a.value,
-        },
-      })
-    )
-  )
+  // Avoid upsert (uses transactions) — delete existing rows then recreate
+  await prisma.answer.deleteMany({ where: { respondentId, sectionIdx } })
+
+  if (answers.length > 0) {
+    await prisma.answer.createMany({
+      data: answers.map((a) => ({
+        respondentId,
+        sectionIdx,
+        questionIdx: a.questionIdx,
+        questionKey: a.questionKey,
+        value: a.value,
+      })),
+    })
+  }
 
   if (lastStepIdx !== undefined) {
     await prisma.respondent.update({

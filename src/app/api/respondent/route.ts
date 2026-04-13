@@ -31,16 +31,16 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ success: true, data: existing })
   }
 
+  // No include on create — avoids potential transaction; new respondent has no answers yet
   const respondent = await prisma.respondent.create({
     data: {
       name: name.trim(),
       email: email.toLowerCase().trim(),
       role: role.trim(),
     },
-    include: { answers: true },
   })
 
-  return NextResponse.json({ success: true, data: respondent })
+  return NextResponse.json({ success: true, data: { ...respondent, answers: [] } })
 }
 
 export async function GET(req: NextRequest) {
