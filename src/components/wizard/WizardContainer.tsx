@@ -2,7 +2,9 @@
 
 import { useState, useCallback, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
+import { signOut } from 'next-auth/react'
 import { AnimatePresence, motion } from 'framer-motion'
+import { LogOut } from 'lucide-react'
 import { SECTIONS } from '@/lib/questions'
 import WizardStep from './WizardStep'
 import ProgressBar from './ProgressBar'
@@ -132,7 +134,20 @@ export default function WizardContainer({ respondent }: WizardContainerProps) {
                 percent={overallPercent}
               />
             </div>
-            <SaveStatus status={saveStatus} />
+            <div className="flex items-center gap-3 flex-shrink-0">
+              <SaveStatus status={saveStatus} />
+              <button
+                onClick={() => {
+                  localStorage.removeItem('eq_respondent_id')
+                  signOut({ callbackUrl: '/login' })
+                }}
+                className="flex items-center gap-1.5 text-xs text-[#9ca3af] hover:text-[#374151] transition-colors px-2 py-1.5 rounded-lg hover:bg-[#f3f4f6]"
+                title="Sign out"
+              >
+                <LogOut size={13} />
+                <span className="hidden sm:inline">Sign out</span>
+              </button>
+            </div>
           </div>
         </div>
       </div>

@@ -6,7 +6,6 @@ import { useRouter } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
 import WizardContainer from '@/components/wizard/WizardContainer'
 import Button from '@/components/ui/Button'
-import Input from '@/components/ui/Input'
 import LoadingSpinner from '@/components/ui/LoadingSpinner'
 import type { RespondentData } from '@/types'
 
@@ -21,11 +20,14 @@ export default function QuestionnairePage() {
   const [respondent, setRespondent] = useState<RespondentData | null>(null)
 
   // Welcome form state
-  const [name, setName] = useState('')
-  const [role, setRole] = useState('')
-  const [email, setEmail] = useState('')
+  const [selected, setSelected] = useState('')
   const [formError, setFormError] = useState('')
   const [submitting, setSubmitting] = useState(false)
+
+  const RESPONDENTS = [
+    { label: 'Bob', name: 'Bob', role: 'Team Member', email: 'bob@internal' },
+    { label: 'Fahad', name: 'Fahad', role: 'Team Member', email: 'fahad@internal' },
+  ]
 
   useEffect(() => {
     if (status === 'unauthenticated') {
@@ -61,22 +63,19 @@ export default function QuestionnairePage() {
     e.preventDefault()
     setFormError('')
 
-    if (!name.trim() || !role.trim() || !email.trim()) {
-      setFormError('All fields are required.')
+    if (!selected) {
+      setFormError('Please select who you are.')
       return
     }
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
-    if (!emailRegex.test(email)) {
-      setFormError('Please enter a valid email address.')
-      return
-    }
+
+    const respondent = RESPONDENTS.find((r) => r.name === selected)!
 
     setSubmitting(true)
     try {
       const res = await fetch('/api/respondent', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name: name.trim(), email: email.trim(), role: role.trim() }),
+        body: JSON.stringify({ name: respondent.name, email: respondent.email, role: respondent.role }),
       })
       const data = await res.json()
       if (!data.success) throw new Error(data.error ?? 'Failed to create respondent')
@@ -122,35 +121,25 @@ export default function QuestionnairePage() {
                 Before we begin
               </h1>
               <p className="text-[#6b7280] text-sm leading-relaxed">
-                This questionnaire covers 17 strategic sections. Your answers are saved automatically as you type — you can return anytime to continue.
+                Select your name to begin. Your answers are saved automatically — you can return anytime to continue.
               </p>
             </div>
 
             <form onSubmit={handleWelcomeSubmit} className="flex flex-col gap-5">
-              <Input
-                label="Full Name"
-                placeholder="Your name"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                required
-                autoFocus
-              />
-              <Input
-                label="Your Role / Title"
-                placeholder="e.g. Head of Ecosystem Development"
-                value={role}
-                onChange={(e) => setRole(e.target.value)}
-                required
-              />
-              <Input
-                label="Email Address"
-                type="email"
-                placeholder="you@example.com"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
-                helper="Used to save and restore your progress"
-              />
+              <div className="flex flex-col gap-1.5">
+                <label className="text-sm font-medium text-[#374151]">Who are you?</label>
+                <select
+                  value={selected}
+                  onChange={(e) => setSelected(e.target.value)}
+                  className="w-full px-4 py-3 rounded-xl border border-[#e5e7eb] text-sm text-[#111827] bg-white transition-all focus:outline-none focus:ring-2 focus:ring-[#3b5bdb] focus:border-transparent appearance-none cursor-pointer"
+                  autoFocus
+                >
+                  <option value="">Select your name...</option>
+                  {RESPONDENTS.map((r) => (
+                    <option key={r.name} value={r.name}>{r.label}</option>
+                  ))}
+                </select>
+              </div>
 
               {formError && (
                 <motion.p
